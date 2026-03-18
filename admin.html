@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GET.FIT Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neon-green': '#00ff88',
+                        'dark-bg': '#0a0a0a',
+                        'dark-card': '#1a1a1a',
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyASJ4PS-0JFcutK7kOFDGBWiEBeRl7TvhM",
+            authDomain: "client-management-9068a.firebaseapp.com",
+            projectId: "client-management-9068a",
+            storageBucket: "client-management-9068a.firebasestorage.app",
+            messagingSenderId: "375035355103",
+            appId: "1:375035355103:web:644ba02d12d7c0bebeee6a",
+            measurementId: "G-MKQ52H97GE"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Make functions available globally
+        window.db = db;
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.updateDoc = updateDoc;
+        window.doc = doc;
+        window.deleteDoc = deleteDoc;
+    </script>
+</head>
+<body class="bg-dark-bg text-white font-poppins">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-dark-card py-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-neon-green">GET.FIT Admin Panel</h1>
+                    <a href="index.html" class="bg-neon-green text-black px-4 py-2 rounded-lg font-semibold hover:bg-opacity-80 transition-colors">
+                        Back to Website
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold mb-4">Client Bookings</h2>
+                <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div class="flex gap-4 items-center">
+                        <button id="refreshBtn" class="bg-neon-green text-black px-6 py-2 rounded-lg font-semibold hover:bg-opacity-80 transition-colors">
+                            Refresh Now
+                        </button>
+                        <button id="autoRefreshBtn" class="bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-80 transition-colors flex items-center gap-2">
+                            <span id="refreshIndicator" class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                            Auto Refresh: OFF
+                        </button>
+                        <div class="text-sm text-gray-400">
+                            Last updated: <span id="lastUpdate">Never</span>
+                            <span id="nextRefresh" class="hidden ml-2">| Next refresh in <span id="countdown">30</span>s</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-center">
+                        <select id="statusFilter" class="bg-dark-card border border-gray-600 rounded px-4 py-2 text-white">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <div class="text-sm text-gray-400">
+                            Total: <span id="totalCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookings Table -->
+            <div class="bg-dark-card rounded-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-dark-bg">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Phone</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Query Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Preferred Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Services</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Message</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsTableBody" class="divide-y divide-gray-700">
+                            <!-- Bookings will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loading" class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-neon-green"></div>
+                <p class="mt-2 text-gray-400">Loading bookings...</p>
+            </div>
+
+            <!-- No bookings message -->
+            <div id="noBookings" class="text-center py-8 hidden">
+                <p class="text-gray-400">No bookings found.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Load bookings on page load
+        document.addEventListener('DOMContentLoaded', loadBookings);
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', loadBookings);
+
+        // Status filter
+        document.getElementById('statusFilter').addEventListener('change', filterBookings);
+
+        // Auto refresh functionality
+        let autoRefreshInterval = null;
+        let countdownInterval = null;
+        let isAutoRefreshEnabled = false;
+
+        document.getElementById('autoRefreshBtn').addEventListener('click', toggleAutoRefresh);
+
+        function toggleAutoRefresh() {
+            const btn = document.getElementById('autoRefreshBtn');
+            const indicator = document.getElementById('refreshIndicator');
+            const nextRefresh = document.getElementById('nextRefresh');
+
+            if (isAutoRefreshEnabled) {
+                // Disable auto refresh
+                clearInterval(autoRefreshInterval);
+                clearInterval(countdownInterval);
+                autoRefreshInterval = null;
+                countdownInterval = null;
+                isAutoRefreshEnabled = false;
+                btn.innerHTML = '<span id="refreshIndicator" class="w-2 h-2 bg-gray-400 rounded-full"></span> Auto Refresh: OFF';
+                btn.classList.remove('bg-green-600');
+                btn.classList.add('bg-gray-600');
+                nextRefresh.classList.add('hidden');
+            } else {
+                // Enable auto refresh (every 30 seconds)
+                isAutoRefreshEnabled = true;
+                btn.innerHTML = '<span id="refreshIndicator" class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> Auto Refresh: ON';
+                btn.classList.remove('bg-gray-600');
+                btn.classList.add('bg-green-600');
+                nextRefresh.classList.remove('hidden');
+                startCountdown();
+                autoRefreshInterval = setInterval(() => {
+                    loadBookings();
+                    startCountdown();
+                }, 30000); // 30 seconds
+            }
+        }
+
+        function startCountdown() {
+            let timeLeft = 30;
+            const countdownElement = document.getElementById('countdown');
+
+            clearInterval(countdownInterval);
+            countdownElement.textContent = timeLeft;
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                countdownElement.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+
+        let allBookings = [];
+
+        async function loadBookings() {
+            const loading = document.getElementById('loading');
+            const noBookings = document.getElementById('noBookings');
+            const tableBody = document.getElementById('bookingsTableBody');
+            const totalCount = document.getElementById('totalCount');
+            const lastUpdate = document.getElementById('lastUpdate');
+
+            loading.classList.remove('hidden');
+            noBookings.classList.add('hidden');
+            tableBody.innerHTML = '';
+
+            try {
+                const querySnapshot = await window.getDocs(window.collection(window.db, "bookings"));
+                loading.classList.add('hidden');
+
+                allBookings = [];
+                querySnapshot.forEach((doc) => {
+                    allBookings.push({ id: doc.id, data: doc.data() });
+                });
+
+                totalCount.textContent = allBookings.length;
+                displayBookings(allBookings);
+
+                // Update last refresh time
+                const now = new Date();
+                lastUpdate.textContent = now.toLocaleTimeString();
+
+            } catch (error) {
+                console.error("Error loading bookings: ", error);
+                loading.classList.add('hidden');
+                alert('Error loading bookings. Please try again.');
+            }
+        }
+
+        function displayBookings(bookings) {
+            const tableBody = document.getElementById('bookingsTableBody');
+            const noBookings = document.getElementById('noBookings');
+
+            tableBody.innerHTML = '';
+
+            if (bookings.length === 0) {
+                noBookings.classList.remove('hidden');
+                return;
+            }
+
+            noBookings.classList.add('hidden');
+
+            bookings.forEach(({ id, data }) => {
+                const row = createBookingRow(id, data);
+                tableBody.appendChild(row);
+            });
+        }
+
+        function filterBookings() {
+            const filterValue = document.getElementById('statusFilter').value;
+
+            if (!filterValue) {
+                displayBookings(allBookings);
+                return;
+            }
+
+            const filteredBookings = allBookings.filter(({ data }) => data.status === filterValue);
+            displayBookings(filteredBookings);
+        }
+
+        function createBookingRow(id, booking) {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-dark-bg transition-colors';
+
+            const date = booking.timestamp ? new Date(booking.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+
+            // Format query type
+            const queryTypeLabels = {
+                'book-trial': 'Book Free Trial',
+                'personal-training': 'Personal Training',
+                'group-classes': 'Group Classes',
+                'weight-loss': 'Weight Loss Program',
+                'strength-training': 'Strength Training',
+                'more-details': 'More Details',
+                'general': 'General Inquiry',
+                'other': 'Other'
+            };
+            const queryTypeDisplay = queryTypeLabels[booking.queryType] || booking.queryType || 'N/A';
+
+            // Format preferred time
+            const timeLabels = {
+                'morning': 'Morning (9AM-12PM)',
+                'afternoon': 'Afternoon (12PM-5PM)',
+                'evening': 'Evening (5PM-9PM)',
+                'weekends': 'Weekends'
+            };
+            const preferredTimeDisplay = timeLabels[booking.preferredTime] || booking.preferredTime || 'N/A';
+
+            // Format services
+            const serviceLabels = {
+                'personal-training': 'Personal Training',
+                'weight-loss': 'Weight Loss',
+                'strength-training': 'Strength Training',
+                'group-classes': 'Group Classes'
+            };
+            const servicesDisplay = booking.services && booking.services.length > 0
+                ? booking.services.map(s => serviceLabels[s] || s).join(', ')
+                : 'N/A';
+
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${booking.name || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    <a href="tel:${booking.phone}" class="text-neon-green hover:underline">${booking.phone || 'N/A'}</a>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${booking.email || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${queryTypeDisplay}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${preferredTimeDisplay}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 max-w-xs truncate" title="${servicesDisplay}">${servicesDisplay}</td>
+                <td class="px-6 py-4 text-sm text-gray-300 max-w-xs truncate" title="${booking.message || 'N/A'}">${booking.message || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${date}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <select onchange="updateStatus('${id}', this.value)" class="bg-dark-bg border border-gray-600 rounded px-2 py-1 text-sm">
+                        <option value="pending" ${booking.status === 'pending' ? 'selected' : ''}>Pending</option>
+                        <option value="confirmed" ${booking.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                        <option value="completed" ${booking.status === 'completed' ? 'selected' : ''}>Completed</option>
+                        <option value="cancelled" ${booking.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button onclick="deleteBooking('${id}')" class="text-red-400 hover:text-red-300 transition-colors">Delete</button>
+                </td>
+            `;
+
+            return row;
+        }
+
+        async function updateStatus(id, status) {
+            try {
+                await window.updateDoc(window.doc(window.db, "bookings", id), {
+                    status: status
+                });
+                console.log("Status updated successfully");
+            } catch (error) {
+                console.error("Error updating status: ", error);
+                alert('Error updating status. Please try again.');
+                loadBookings(); // Reload to revert changes
+            }
+        }
+
+        async function deleteBooking(id) {
+            if (!confirm('Are you sure you want to delete this booking?')) {
+                return;
+            }
+
+            try {
+                await window.deleteDoc(window.doc(window.db, "bookings", id));
+                console.log("Booking deleted successfully");
+                loadBookings(); // Reload the table
+            } catch (error) {
+                console.error("Error deleting booking: ", error);
+                alert('Error deleting booking. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
