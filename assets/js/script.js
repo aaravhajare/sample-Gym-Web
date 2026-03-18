@@ -60,83 +60,85 @@ document.querySelectorAll('input, select, textarea').forEach(field => {
 });
 
 // Form submission with Firestore
-document.querySelector('form').addEventListener('submit', async function(e) {
-    e.preventDefault();
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('form').addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const queryType = document.getElementById('queryType').value;
-    const preferredTime = document.getElementById('preferredTime').value;
-    const message = document.getElementById('message').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const queryType = document.getElementById('queryType').value;
+        const preferredTime = document.getElementById('preferredTime').value;
+        const message = document.getElementById('message').value.trim();
 
-    // Get selected services
-    const servicesCheckboxes = document.querySelectorAll('input[name="services"]:checked');
-    const services = Array.from(servicesCheckboxes).map(cb => cb.value);
+        // Get selected services
+        const servicesCheckboxes = document.querySelectorAll('input[name="services"]:checked');
+        const services = Array.from(servicesCheckboxes).map(cb => cb.value);
 
-    // Validation
-    if (!name) {
-        alert('Please enter your name.');
-        document.getElementById('name').focus();
-        return;
-    }
-
-    if (!phone) {
-        alert('Please enter your phone number.');
-        document.getElementById('phone').focus();
-        return;
-    }
-
-    // Basic phone validation (Indian mobile numbers)
-    const phoneRegex = /^[6-9]\d{9}$/;
-    if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
-        alert('Please enter a valid 10-digit mobile number.');
-        document.getElementById('phone').focus();
-        return;
-    }
-
-    if (!queryType) {
-        alert('Please select what you need help with.');
-        document.getElementById('queryType').focus();
-        return;
-    }
-
-    // Show loading state
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Sending...';
-    submitBtn.disabled = true;
-
-    try {
-        const docRef = await window.addDoc(window.collection(window.db, "bookings"), {
-            name: name,
-            phone: phone,
-            email: email || null,
-            queryType: queryType,
-            preferredTime: preferredTime || null,
-            services: services,
-            message: message || null,
-            timestamp: new Date(),
-            status: 'pending'
-        });
-
-        // Success message based on query type
-        let successMessage = 'Thank you for your inquiry! ';
-        if (queryType === 'book-trial') {
-            successMessage += 'We\'ll contact you soon to schedule your free trial.';
-        } else {
-            successMessage += 'We\'ll get back to you within 24 hours.';
+        // Validation
+        if (!name) {
+            alert('Please enter your name.');
+            document.getElementById('name').focus();
+            return;
         }
 
-        alert(successMessage);
-        this.reset();
-        console.log("Document written with ID: ", docRef.id);
-    } catch (error) {
-        console.error("Error adding document: ", error);
-        alert('There was an error submitting your form. Please try again or contact us directly.');
-    } finally {
-        // Reset button state
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-    }
+        if (!phone) {
+            alert('Please enter your phone number.');
+            document.getElementById('phone').focus();
+            return;
+        }
+
+        // Basic phone validation (Indian mobile numbers)
+        const phoneRegex = /^[6-9]\d{9}$/;
+        if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
+            alert('Please enter a valid 10-digit mobile number.');
+            document.getElementById('phone').focus();
+            return;
+        }
+
+        if (!queryType) {
+            alert('Please select what you need help with.');
+            document.getElementById('queryType').focus();
+            return;
+        }
+
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Sending...';
+        submitBtn.disabled = true;
+
+        try {
+            const docRef = await window.addDoc(window.collection(window.db, "gym_booking"), {
+                name: name,
+                phone: phone,
+                email: email || null,
+                queryType: queryType,
+                preferredTime: preferredTime || null,
+                services: services,
+                message: message || null,
+                timestamp: new Date(),
+                status: 'pending'
+            });
+
+            // Success message based on query type
+            let successMessage = 'Thank you for your inquiry! ';
+            if (queryType === 'book-trial') {
+                successMessage += 'We\'ll contact you soon to schedule your free trial.';
+            } else {
+                successMessage += 'We\'ll get back to you within 24 hours.';
+            }
+
+            alert(successMessage);
+            this.reset();
+            console.log("Document written with ID: ", docRef.id);
+        } catch (error) {
+            console.error("Error adding document: ", error);
+            alert('There was an error submitting your form. Please try again or contact us directly.');
+        } finally {
+            // Reset button state
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
+    });
 });
