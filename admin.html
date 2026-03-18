@@ -339,7 +339,7 @@ const firebaseConfig = {
 
         async function updateStatus(id, status) {
             try {
-                await window.updateDoc(window.doc(window.db, "bookings", id), {
+                await window.updateDoc(window.doc(window.db, "gym_booking", id), {
                     status: status
                 });
                 console.log("Status updated successfully");
@@ -356,7 +356,7 @@ const firebaseConfig = {
             }
 
             try {
-                await window.deleteDoc(window.doc(window.db, "bookings", id));
+                await window.deleteDoc(window.doc(window.db, "gym_booking", id));
                 console.log("Booking deleted successfully");
                 loadBookings(); // Reload the table
             } catch (error) {
